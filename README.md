@@ -9,4 +9,4 @@ PostgreSQL
 Psychopg2
 SQLAlchmey
 Flask-SQLAlchemy
-AJA
+AJAX
