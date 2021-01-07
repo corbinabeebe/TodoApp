@@ -15,6 +15,7 @@
                 clear: both;
             }
             li button {
+                background: white;
                 -webkit-appearance: none;
                 border: none;
                 outline: none;
@@ -51,13 +52,27 @@
             <ul id="todos">
                 {% for todo in todos %}
                     <li>
-                        <input class="check-completed" data-id="{{ todo.id }}" type="checkbox" {% if todo.completed %} checked {% endif %}/>
+                        <input class="check-completed" data-id="{{ todo.id }}"
+                               type="checkbox" {% if todo.completed %} checked {% endif %}/>
                         {{ todo.description }}
+                        <button class="delete-button" data-id="{{ todo.id }}">&cross;</button>
                     </li>
                 {% endfor %}
             </ul>
         </div>
         <script>
+            {# Delete items#}
+            const deleteItem = document.querySelectorAll('.delete-button');
+            for(let i=0; i< deleteItem.length; i++) {
+                const btn = deleteItem[i];
+                btn.onclick = function (e) {
+                    const todoID = e.target.dataset['id'];
+                    fetch('/todos/' + todoID, {
+                        method: 'DELETE',
+                    }){# get response after fetch #}
+                .then(response => response.json());
+                }
+            }
             {# checkbox handler #}
             const checkboxes = document.querySelectorAll('.check-completed');
             for(let i = 0; i < checkboxes.length; i++) {
@@ -75,12 +90,14 @@
                             'Content-Type': 'application/json',
                         }
                     })
+                        {# get response after fetch #}
+                    .then(response => response.json())
                     .then(function() {
                          document.getElementById('error').className = 'hidden';
                     })
                     .catch(function() {
                     document.getElementById('error').className = '';
-                    })
+                    });
                 }
             }
 
