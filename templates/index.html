@@ -5,22 +5,86 @@
             .hidden {
                 display: none;
             }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                width: 300px;
+            }
+            li {
+                clear: both;
+            }
+            li button {
+                -webkit-appearance: none;
+                border: none;
+                outline: none;
+                color: red;
+                float: right;
+                cursor: crosshair;
+                font-size: 20px;
+            }
+            .lists-wrapper, .todos-wrapper {
+                display: inline-block;
+                vertical-align: top;
+            }
         </style>
     </head>
     <body>
+{#        <div class="lists-wrapper">#}
+{#            <ul id="lists">#}
+{#                {% for list in lists %}#}
+{#                <li>#}
+{#                    <a href="/lists/{{ list.id }}">#}
+{#                        {{ list.name }}#}
+{#                    </a>#}
+{#                </li>#}
+{#                {% endfor %}#}
+{#            </ul>#}
+{#        </div>#}
+        <div class="todos-wrapper">
+{#        <h4>{{ active_list.name }}</h4>#}
         <form id="form">
-            <div>
-                <input type="text" id="description" name="description"/>
-                <input type="submit" value="Create"/>
-            </div>
+            <input type="text" id="description" name="description"/>
+            <input type="submit" value="Create"/>
         </form>
         <div id="error" class="hidden">Something went wrong!</div>
-        <ul id="todos">
-            {% for d in data %}
-                <li>{{ d.description }}</li>
-            {% endfor %}
-        </ul>
+            <ul id="todos">
+                {% for todo in todos %}
+                    <li>
+                        <input class="check-completed" data-id="{{ todo.id }}" type="checkbox" {% if todo.completed %} checked {% endif %}/>
+                        {{ todo.description }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
         <script>
+            {# checkbox handler #}
+            const checkboxes = document.querySelectorAll('.check-completed');
+            for(let i = 0; i < checkboxes.length; i++) {
+                const checkbox = checkboxes[i];
+                checkbox.onchange = function (e) {
+                    const newCompleted = e.target.checked;
+                    {# Bind data to the DOM #}
+                    const todoID = e.target.dataset['id'];
+                    fetch('/todos/' + todoID + '/set-completed', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': newCompleted
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(function() {
+                         document.getElementById('error').className = 'hidden';
+                    })
+                    .catch(function() {
+                    document.getElementById('error').className = '';
+                    })
+                }
+            }
+
+            {# asynchronous script #}
             const descriptionInput = document.getElementById('description');
             document.getElementById('form').onsubmit = function(e) {
                 {# prevents page from doing a full refresh#}
@@ -31,10 +95,10 @@
                 fetch('/todos/create', {
                     method: 'POST',
                     body: JSON.stringify({
-                        'description': document.getElementById('description').value
+                        'description': descr
                     }),
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     }
                 })
                 {# get response after fetch #}
@@ -42,8 +106,8 @@
                 {# parse json and and append child list element #}
                 .then(jsonResponse => {
                     console.log('response', jsonResponse);
-                    li = document.createElement('li');
-                    li.innerText = descr;
+                    let li = document.createElement('li');
+                    li.innerHTML = descr;
                     document.getElementById('todos').appendChild(li);
                     document.getElementById('error').className = 'hidden';
                 })
